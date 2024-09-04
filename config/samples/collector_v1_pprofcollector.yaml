@@ -1,0 +1,16 @@
+apiVersion: collector.profiling.operators/v1
+kind: PprofCollector
+metadata:
+  labels:
+    app.kubernetes.io/name: pprof-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: pprofcollector-sample
+  namespace: pprof-operator-system
+spec:
+  schedule: "10 * * * *"
+  duration: "2s"
+  selector:
+    matchLabels:
+      app: hello
+  port: 8080
+  basePath: "/debug/pprof/"

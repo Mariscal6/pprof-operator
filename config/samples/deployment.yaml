@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: hello
+  name: hello-gophers-gomad
+  namespace: pprof-operator-system
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: hello
+  template:
+    metadata:
+      labels:
+        app: hello
+    spec:
+      containers:
+        - image: localhost:5000/gopher-pprof:latest
+          imagePullPolicy: Always
+          name: gopher-pprof
+          ports:
+            - containerPort: 8080
+              protocol: TCP

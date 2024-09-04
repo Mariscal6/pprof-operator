@@ -1,0 +1,151 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.15.0
+  name: pprofcollectors.collector.profiling.operators
+spec:
+  group: collector.profiling.operators
+  names:
+    kind: PprofCollector
+    listKind: PprofCollectorList
+    plural: pprofcollectors
+    singular: pprofcollector
+  scope: Namespaced
+  versions:
+  - name: v1
+    schema:
+      openAPIV3Schema:
+        description: PprofCollector is the Schema for the pprofcollectors API
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: PprofCollectorSpec defines the desired state of PprofCollector
+            properties:
+              basePath:
+                description: |-
+                  BasePath specifies the base path to collect pprof data from.
+                  If not specified /debug/pprof/ will be used.
+                type: string
+              duration:
+                description: |-
+                  Duration defines the length of time to collect data during each collection period.
+                  this cannot be bigger than the interval
+                  use golang duration format (e.g., 1m, 1h)
+                type: string
+              port:
+                description: Port specifies the port to connect to the target pods.
+                format: int32
+                type: integer
+              schedule:
+                description: |-
+                  Interval defines how often the pprof data should be collected.
+                  use cron format
+                type: string
+              selector:
+                description: Selector specifies the target pods to collect pprof data
+                  from.
+                properties:
+                  matchExpressions:
+                    description: matchExpressions is a list of label selector requirements.
+                      The requirements are ANDed.
+                    items:
+                      description: |-
+                        A label selector requirement is a selector that contains values, a key, and an operator that
+                        relates the key and values.
+                      properties:
+                        key:
+                          description: key is the label key that the selector applies
+                            to.
+                          type: string
+                        operator:
+                          description: |-
+                            operator represents a key's relationship to a set of values.
+                            Valid operators are In, NotIn, Exists and DoesNotExist.
+                          type: string
+                        values:
+                          description: |-
+                            values is an array of string values. If the operator is In or NotIn,
+                            the values array must be non-empty. If the operator is Exists or DoesNotExist,
+                            the values array must be empty. This array is replaced during a strategic
+                            merge patch.
+                          items:
+                            type: string
+                          type: array
+                          x-kubernetes-list-type: atomic
+                      required:
+                      - key
+                      - operator
+                      type: object
+                    type: array
+                    x-kubernetes-list-type: atomic
+                  matchLabels:
+                    additionalProperties:
+                      type: string
+                    description: |-
+                      matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels
+                      map is equivalent to an element of matchExpressions, whose key field is "key", the
+                      operator is "In", and the values array contains only "value". The requirements are ANDed.
+                    type: object
+                type: object
+                x-kubernetes-map-type: atomic
+            required:
+            - selector
+            type: object
+          status:
+            description: PprofCollectorStatus defines the observed state of PprofCollector
+            properties:
+              LastCollectedPodsCount:
+                description: LastCollectedPodsCount is the number of profiles successfully
+                  collected since the PprofCollector started.
+                format: int32
+                type: integer
+              lastCollectionStatus:
+                description: LastCollectionStatus indicates whether the last profile
+                  collection was successful or failed.
+                type: string
+              lastCollectionTime:
+                description: LastCollectionTime is the timestamp of the last successful
+                  profile collection.
+                format: date-time
+                type: string
+              message:
+                description: Message is a human-readable message indicating details
+                  about the current status.
+                type: string
+              nextCollectionTime:
+                description: NextCollectionTime is the timestamp of the next scheduled
+                  profile collection.
+                format: date-time
+                type: string
+              phase:
+                description: Phase indicates the current phase of the PprofCollector
+                  (e.g., Running, Succeeded, Failed).
+                enum:
+                - Running
+                - Succeeded
+                - Failed
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

@@ -1,0 +1,4 @@
+## Append samples of your project ##
+resources:
+- collector_v1_pprofcollector.yaml
+# +kubebuilder:scaffold:manifestskustomizesamples

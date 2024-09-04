@@ -1,0 +1,52 @@
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: mutating-webhook-configuration
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-collector-profiling-operators-v1-pprofcollector
+  failurePolicy: Fail
+  name: mpprofcollector.kb.io
+  rules:
+  - apiGroups:
+    - collector.profiling.operators
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - pprofcollectors
+  sideEffects: None
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: validating-webhook-configuration
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-collector-profiling-operators-v1-pprofcollector
+  failurePolicy: Fail
+  name: vpprofcollector.kb.io
+  rules:
+  - apiGroups:
+    - collector.profiling.operators
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - pprofcollectors
+  sideEffects: None

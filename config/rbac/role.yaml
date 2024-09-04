@@ -1,0 +1,40 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: manager-role
+rules:
+  - apiGroups:
+      - collector.profiling.operators
+    resources:
+      - pprofcollectors
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - collector.profiling.operators
+    resources:
+      - pprofcollectors/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - collector.profiling.operators
+    resources:
+      - pprofcollectors/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - get
+      - list
+      - watch
