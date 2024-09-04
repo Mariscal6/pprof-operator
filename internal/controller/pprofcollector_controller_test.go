@@ -111,7 +111,7 @@ var _ = Describe("PprofCollector Controller", func() {
 			controllerReconciler := &PprofCollectorReconciler{
 				Client:         k8sClient,
 				Scheme:         k8sClient.Scheme(),
-				pprofCollector: &collector.GoPprofCollector{},
+				PprofCollector: &collector.GoPprofCollector{},
 			}
 			now := time.Now()
 			schedule, err := cron.ParseStandard(pprofcollector.Spec.Schedule)

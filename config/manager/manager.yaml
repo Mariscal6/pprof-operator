@@ -46,10 +46,7 @@ spec:
           image: controller:latest
           name: manager
           securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-                - "ALL"
+            allowPrivilegeEscalation: true
           livenessProbe:
             httpGet:
               path: /healthz
@@ -79,5 +76,4 @@ spec:
       terminationGracePeriodSeconds: 10
       volumes:
         - name: pprof-vol
-          persistentVolumeClaim:
-            claimName: pprof-pvc
+          emptyDir: {}

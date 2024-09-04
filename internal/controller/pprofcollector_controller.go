@@ -28,7 +28,6 @@ import (
 	"golang.org/x/sync/errgroup"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/fields"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -47,7 +46,7 @@ const defaultProfileName = "default.pgo"
 type PprofCollectorReconciler struct {
 	client.Client
 	Scheme         *runtime.Scheme
-	pprofCollector collector.ProfileCollector
+	PprofCollector collector.ProfileCollector
 }
 
 // +kubebuilder:rbac:groups=collector.profiling.operators,resources=pprofcollectors,verbs=get;list;watch;create;update;patch;delete
@@ -63,20 +62,8 @@ func (r *PprofCollectorReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 
 	var pods corev1.PodList
 	if err := r.List(ctx, &pods, client.InNamespace(req.Namespace),
-		client.MatchingLabels(collector.Spec.Selector.MatchLabels),
-		&client.ListOptions{
-			FieldSelector: fields.SelectorFromSet(fields.Set{"status.phase": string(corev1.PodRunning)}),
-		}); err != nil {
-		if pods.Items == nil {
-			collector.Status.Phase = collectorv1.Failed
-			collector.Status.Message = "No pods found"
-			if err := r.Status().Update(ctx, &collector); err != nil {
-				log.Error(err, "unable to update PprofCollector status")
-				return ctrl.Result{}, err
-			}
-			return ctrl.Result{}, client.IgnoreNotFound(fmt.Errorf("unable to list pods"))
-		}
-		return ctrl.Result{}, err
+		client.MatchingLabels(collector.Spec.Selector.MatchLabels)); err != nil {
+		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
 	// if folder does not exist
@@ -134,7 +121,9 @@ func (r *PprofCollectorReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	for _, pod := range pods.Items {
 		g.Go(func() error {
 			buf := bytes.Buffer{}
-			err = r.pprofCollector.GetProfile(fmt.Sprintf("http://%s.%s:%d%s", pod.Status.PodIP, collector.Namespace, collector.Spec.Port, collector.Spec.BasePath), duration, &buf)
+			url := fmt.Sprintf("http://%s:%d%s", pod.Status.PodIP, collector.Spec.Port, collector.Spec.BasePath)
+			err = r.PprofCollector.GetProfile(url, duration, &buf)
+			log.Info("collecting profile", "url", url)
 			if err != nil {
 				log.Error(err, "unable to collect profile")
 				return err
@@ -159,12 +148,8 @@ func (r *PprofCollectorReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 	if len(podProfiles) == 0 {
 		collector.Status.Phase = collectorv1.Failed
 		collector.Status.Message = "No profiles collected"
-		return ctrl.Result{
-			Requeue:      true,
-			RequeueAfter: now.Sub(nextSchedule),
-		}, nil
-	}
 
+	}
 	collector.Status.Phase = collectorv1.Succeeded
 	collector.Status.Message = "Successfully collected profiles"
 	// merge profiles
@@ -174,7 +159,7 @@ func (r *PprofCollectorReconciler) Reconcile(ctx context.Context, req ctrl.Reque
 		collector.Status.Phase = collectorv1.Failed
 		collector.Status.Message = "Failed to created merged file"
 	}
-	if err := r.pprofCollector.MergeProfiles(podProfiles, mergedFile); err != nil {
+	if err := r.PprofCollector.MergeProfiles(podProfiles, mergedFile); err != nil {
 		log.Error(err, "unable to merge profiles")
 		collector.Status.Phase = collectorv1.Failed
 		collector.Status.Message = "Failed to merge profiles"
@@ -218,7 +203,7 @@ func (r *PprofCollectorReconciler) checkFolderExists(collector collectorv1.Pprof
 // createCollectorDir creates the directory for the collector
 func (r *PprofCollectorReconciler) createCollectorDir(collector collectorv1.PprofCollector) error {
 	// Create the base directory for the collector
-	err := os.MkdirAll(fmt.Sprintf("%s/%s", baseDir, collector.Name), os.ModePerm)
+	err := os.MkdirAll(fmt.Sprintf("/%s/%s", baseDir, collector.Name), os.ModePerm)
 	if err != nil {
 		return err
 	}

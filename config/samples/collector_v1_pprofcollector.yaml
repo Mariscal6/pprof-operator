@@ -13,4 +13,4 @@ spec:
     matchLabels:
       app: hello
   port: 8080
-  basePath: "/debug/pprof/"
+  basePath: "/debug/pprof/profile"

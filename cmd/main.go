@@ -36,6 +36,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	collectorv1 "github.com/Mariscal6/pprof-operator/api/v1"
+	"github.com/Mariscal6/pprof-operator/internal/collector"
 	"github.com/Mariscal6/pprof-operator/internal/controller"
 	// +kubebuilder:scaffold:imports
 )
@@ -124,8 +125,9 @@ func main() {
 	}
 
 	if err = (&controller.PprofCollectorReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Client:         mgr.GetClient(),
+		Scheme:         mgr.GetScheme(),
+		PprofCollector: collector.GoPprofCollector{},
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "PprofCollector")
 		os.Exit(1)
